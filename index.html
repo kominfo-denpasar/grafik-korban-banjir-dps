@@ -6,6 +6,10 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+        <!-- CSS & Library Leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     </head>
     <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6 gap-8 pb-20">
         <div class="grid md:grid-cols-4 gap-6 w-full">
@@ -98,6 +102,41 @@
             </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+            <!-- Chart Jenis Kerusakan -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Jenis Kerusakan</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+
+                <!-- Chart -->
+                <div class="relative w-full">
+                    <div class="aspect-[4/3] sm:aspect-[16/9]">
+                        <canvas id="kerusakanChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
+            </div>
+
+            <!-- Grafik Kecamatan -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Sebaran Data per Kecamatan</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+
+                <div class="relative w-full">
+                    <div class="aspect-[4/3] sm:aspect-[16/9]">
+                        <canvas id="kecamatanChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Peta Lokasi Korban -->
+        <!-- <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 w-full">
+            <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-4 text-center">🗺️ Peta Lokasi Korban</h2>
+            <div id="map" class="w-full h-[600px] rounded-lg"></div>
+        </div> -->
+
         <!-- Sticky Footer -->
         <footer class="w-full bg-gray-800 text-gray-200 py-4 mt-8 fixed bottom-0 left-0">
             <div class="flex flex-col md:flex-row justify-between items-center px-6">
@@ -112,14 +151,20 @@
             // Sheet Names
             const sheetPengungsi = "dashboardStatusPengungsi";
             const sheetKorban = "dashboardStatusKorban";
+            const sheetKecamatan = "dashboardKecamatan";
+            const sheetKerusakan = "dashboardJenisKerusakan";
 
             // Chart instances
             let pengungsiChart;
             let korbanChart;
+            let kecamatanChart;
+            let kerusakanChart;
 
             // Default types
             let typePengungsi = "pie";
             let typeKorban = "bar";
+            let typeKecamatan = "pie";
+            let typeKerusakan = "bar";
 
             // Fungsi load data dari Google Sheet
             async function loadData(sheetName, chartId, chartRef, currentType) {
@@ -129,14 +174,12 @@
                 const jsonData = JSON.parse(rep.substring(47).slice(0, -2));
                 const rows = jsonData.table.rows;
 
-                const labels = rows.map((r) => r.c[0].v);
-                const data = rows.map((r) => r.c[1].v);
+                const labels = rows.map((r) => r.c[0]?.v);
+                const data = rows.map((r) => r.c[1]?.v);
 
                 const ctx = document.getElementById(chartId).getContext("2d");
 
-                if (chartRef.value) {
-                    chartRef.value.destroy();
-                }
+                if (chartRef.value) chartRef.value.destroy();
 
                 chartRef.value = new Chart(ctx, {
                     type: currentType,
@@ -178,7 +221,7 @@
                                         const percent = ((value / total) * 100).toFixed(1);
                                         return `${value} (${percent}%)`;
                                     } else {
-                                        return value; // bar chart hanya angka
+                                        return value;
                                     }
                                 },
                             },
@@ -197,7 +240,7 @@
                 });
             }
 
-            // Load kedua grafik pertama kali
+            // Load semua grafik pertama kali
             loadData(
                 sheetPengungsi,
                 "pengungsiChart",
@@ -211,6 +254,7 @@
                 },
                 typePengungsi
             );
+
             loadData(
                 sheetKorban,
                 "korbanChart",
@@ -223,6 +267,34 @@
                     },
                 },
                 typeKorban
+            );
+
+            loadData(
+                sheetKecamatan,
+                "kecamatanChart",
+                {
+                    get value() {
+                        return kecamatanChart;
+                    },
+                    set value(v) {
+                        kecamatanChart = v;
+                    },
+                },
+                typeKecamatan
+            );
+
+            loadData(
+                sheetKerusakan,
+                "kerusakanChart",
+                {
+                    get value() {
+                        return kerusakanChart;
+                    },
+                    set value(v) {
+                        kerusakanChart = v;
+                    },
+                },
+                typeKerusakan
             );
 
             // Refresh tiap 3 menit
@@ -253,10 +325,36 @@
                     },
                     typeKorban
                 );
+                loadData(
+                    sheetKecamatan,
+                    "kecamatanChart",
+                    {
+                        get value() {
+                            return kecamatanChart;
+                        },
+                        set value(v) {
+                            kecamatanChart = v;
+                        },
+                    },
+                    typeKecamatan
+                );
+                loadData(
+                    sheetKerusakan,
+                    "kerusakanChart",
+                    {
+                        get value() {
+                            return kerusakanChart;
+                        },
+                        set value(v) {
+                            kerusakanChart = v;
+                        },
+                    },
+                    typeKerusakan
+                );
             }, 180000);
 
-            // Event listener tombol
-            document.getElementById("pieBtnPengungsi").addEventListener("click", () => {
+            // Event listener tombol toggle (jika disiapkan tombolnya di HTML)
+            document.getElementById("pieBtnPengungsi")?.addEventListener("click", () => {
                 typePengungsi = "pie";
                 loadData(
                     sheetPengungsi,
@@ -272,7 +370,7 @@
                     typePengungsi
                 );
             });
-            document.getElementById("barBtnPengungsi").addEventListener("click", () => {
+            document.getElementById("barBtnPengungsi")?.addEventListener("click", () => {
                 typePengungsi = "bar";
                 loadData(
                     sheetPengungsi,
@@ -289,7 +387,7 @@
                 );
             });
 
-            document.getElementById("pieBtnKorban").addEventListener("click", () => {
+            document.getElementById("pieBtnKorban")?.addEventListener("click", () => {
                 typeKorban = "pie";
                 loadData(
                     sheetKorban,
@@ -305,7 +403,7 @@
                     typeKorban
                 );
             });
-            document.getElementById("barBtnKorban").addEventListener("click", () => {
+            document.getElementById("barBtnKorban")?.addEventListener("click", () => {
                 typeKorban = "bar";
                 loadData(
                     sheetKorban,
@@ -319,6 +417,72 @@
                         },
                     },
                     typeKorban
+                );
+            });
+
+            document.getElementById("pieBtnKecamatan")?.addEventListener("click", () => {
+                typeKecamatan = "pie";
+                loadData(
+                    sheetKecamatan,
+                    "kecamatanChart",
+                    {
+                        get value() {
+                            return kecamatanChart;
+                        },
+                        set value(v) {
+                            kecamatanChart = v;
+                        },
+                    },
+                    typeKecamatan
+                );
+            });
+            document.getElementById("barBtnKecamatan")?.addEventListener("click", () => {
+                typeKecamatan = "bar";
+                loadData(
+                    sheetKecamatan,
+                    "kecamatanChart",
+                    {
+                        get value() {
+                            return kecamatanChart;
+                        },
+                        set value(v) {
+                            kecamatanChart = v;
+                        },
+                    },
+                    typeKecamatan
+                );
+            });
+
+            document.getElementById("pieBtnKerusakan")?.addEventListener("click", () => {
+                typeKerusakan = "pie";
+                loadData(
+                    sheetKerusakan,
+                    "kerusakanChart",
+                    {
+                        get value() {
+                            return kerusakanChart;
+                        },
+                        set value(v) {
+                            kerusakanChart = v;
+                        },
+                    },
+                    typeKerusakan
+                );
+            });
+            document.getElementById("barBtnKerusakan")?.addEventListener("click", () => {
+                typeKerusakan = "bar";
+                loadData(
+                    sheetKerusakan,
+                    "kerusakanChart",
+                    {
+                        get value() {
+                            return kerusakanChart;
+                        },
+                        set value(v) {
+                            kerusakanChart = v;
+                        },
+                    },
+                    typeKerusakan
                 );
             });
         </script>
@@ -385,6 +549,56 @@
             setInterval(() => {
                 updateTotalKorban("dashboardTotalKorbanMasuk");
             }, 180000);
+        </script>
+
+        <script>
+            const sheetKoordinat = "dashboardKoordinatPeta";
+
+            // Inisialisasi peta
+            const map = L.map("map").setView([-8.65, 115.22], 12);
+
+            // Tambah layer OpenStreetMap
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap contributors",
+            }).addTo(map);
+
+            // Fungsi load data dari Google Sheet
+            async function loadMapData() {
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetKoordinat}`;
+                const res = await fetch(url);
+                const rep = await res.text();
+                const jsonData = JSON.parse(rep.substring(47).slice(0, -2));
+                const rows = jsonData.table.rows;
+
+                // Hapus marker lama
+                map.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) map.removeLayer(layer);
+                });
+
+                rows.forEach((r) => {
+                    const nama = r.c[0]?.v; // Nama Lokasi
+                    const lat = r.c[2]?.v; // Latidute
+                    const lng = r.c[3]?.v; // Longtidue
+                    const fileId = r.c[5]?.v; // Ambil File ID
+
+                    if (lat && lng) {
+                        const fotoUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : "";
+
+                        // Buat element image dengan fallback jika gagal load
+                        const imgHtml = fotoUrl
+                            ? `<img src="${fotoUrl}" class="popup-img" onerror="this.onerror=null;this.replaceWith(document.createElement('div').innerHTML='<div class=\\'popup-placeholder\\'>Gambar tidak tersedia</div>');">`
+                            : "";
+
+                        L.marker([lat, lng]).addTo(map).bindPopup(`<b>${nama}</b>${imgHtml}`);
+                    }
+                });
+            }
+
+            // Panggil pertama kali
+            loadMapData();
+
+            // Refresh setiap 3 menit
+            setInterval(loadMapData, 180000);
         </script>
     </body>
 </html>
