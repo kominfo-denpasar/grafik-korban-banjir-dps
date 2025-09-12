@@ -8,6 +8,32 @@
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     </head>
     <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-6xl mx-auto">
+            <!-- Total Korban -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 flex flex-col items-center">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 text-center">Total Korban</h2>
+                <p id="totalKorbanAll" class="text-2xl sm:text-4xl font-extrabold text-red-600">0</p>
+            </div>
+
+            <!-- Laki-laki -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 flex flex-col items-center">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 text-center">Laki-laki</h2>
+                <p id="totalKorbanLaki" class="text-2xl sm:text-4xl font-extrabold text-red-600">0</p>
+            </div>
+
+            <!-- Perempuan -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 flex flex-col items-center">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 text-center">Perempuan</h2>
+                <p id="totalKorbanPerempuan" class="text-2xl sm:text-4xl font-extrabold text-red-600">0</p>
+            </div>
+
+            <!-- Data tidak lengkap -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 flex flex-col items-center">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 text-center">Tanpa Status Jenis Kelamin</h2>
+                <p id="totalKorbanTidakLengkap" class="text-2xl sm:text-4xl font-extrabold text-red-600">0</p>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
             <!-- Card Data Pengungsi -->
             <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
@@ -327,6 +353,41 @@
             setInterval(() => {
                 renderTable(sheetPengungsi, "tablePengungsi");
                 renderTable(sheetKorban, "tableKorban");
+            }, 180000);
+        </script>
+
+        <script>
+            function updateTotalKorban(sheetName) {
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+                fetch(url)
+                    .then((res) => res.text())
+                    .then((rep) => {
+                        const jsonData = JSON.parse(rep.substring(47).slice(0, -2));
+                        const rows = jsonData.table.rows;
+
+                        rows.forEach((r) => {
+                            const label = r.c[0].v.toLowerCase();
+                            const value = r.c[1].v;
+
+                            if (label.includes("total data korban")) {
+                                document.getElementById("totalKorbanAll").textContent = value;
+                            } else if (label.includes("laki")) {
+                                document.getElementById("totalKorbanLaki").textContent = value;
+                            } else if (label.includes("perempuan")) {
+                                document.getElementById("totalKorbanPerempuan").textContent = value;
+                            } else if (label.includes("tidak lengkap")) {
+                                document.getElementById("totalKorbanTidakLengkap").textContent = value;
+                            }
+                        });
+                    });
+            }
+
+            // Panggil setelah load halaman
+            updateTotalKorban("dashboardTotalKorbanMasuk");
+
+            // Refresh tiap 3 menit
+            setInterval(() => {
+                updateTotalKorban("dashboardTotalKorbanMasuk");
             }, 180000);
         </script>
     </body>
