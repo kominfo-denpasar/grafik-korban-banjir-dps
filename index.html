@@ -5,6 +5,7 @@
         <title>Grafik Status Pengungsi & Korban</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     </head>
     <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6 gap-8">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
@@ -52,11 +53,11 @@
         </div>
 
         <script>
-            const spreadsheetId = "1Jq3oW90z2dhdzN1rpsfVxRTOv3ftbDEU";
+            const spreadsheetId = "1pyXzTvTl6BAkech4z4b1BhmR5aEBpAvZ";
 
             // Sheet Names
-            const sheetPengungsi = "statusPengungsi";
-            const sheetKorban = "statusKorban";
+            const sheetPengungsi = "dashboardStatusPengungsi";
+            const sheetKorban = "dashboardStatusKorban";
 
             // Chart instances
             let pengungsiChart;
@@ -112,6 +113,21 @@
                                 position: currentType === "pie" ? "bottom" : "top",
                                 labels: { font: { size: 12 } },
                             },
+                            datalabels: {
+                                color: "#000",
+                                font: { weight: "bold", size: 12 },
+                                anchor: "center",
+                                align: currentType === "bar" ? "end" : "center",
+                                formatter: (value, context) => {
+                                    if (currentType === "pie") {
+                                        const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        const percent = ((value / total) * 100).toFixed(1);
+                                        return `${value} (${percent}%)`;
+                                    } else {
+                                        return value; // bar chart hanya angka
+                                    }
+                                },
+                            },
                         },
                         scales:
                             currentType === "bar"
@@ -123,6 +139,7 @@
                                   }
                                 : {},
                     },
+                    plugins: [ChartDataLabels],
                 });
             }
 
