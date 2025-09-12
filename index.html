@@ -9,6 +9,38 @@
     </head>
     <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6 gap-8">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
+            <!-- Card Data Pengungsi -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-4 text-center">📋 Data Status Pengungsi</h2>
+                <div class="overflow-x-auto">
+                    <table id="tablePengungsi" class="min-w-full text-sm text-left text-gray-600">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="px-4 py-2">Status Mengungsi</th>
+                                <th class="px-4 py-2">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Card Data Korban -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-4 text-center">📋 Data Status Korban</h2>
+                <div class="overflow-x-auto">
+                    <table id="tableKorban" class="min-w-full text-sm text-left text-gray-600">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="px-4 py-2">Status Korban</th>
+                                <th class="px-4 py-2">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Card Status Pengungsi -->
             <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
                 <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Status Pengungsi</h2>
@@ -267,6 +299,35 @@
                     typeKorban
                 );
             });
+        </script>
+
+        <script>
+            function renderTable(sheetName, tableId) {
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+                fetch(url)
+                    .then((res) => res.text())
+                    .then((rep) => {
+                        const jsonData = JSON.parse(rep.substring(47).slice(0, -2));
+                        const rows = jsonData.table.rows;
+                        const tbody = document.querySelector(`#${tableId} tbody`);
+                        tbody.innerHTML = ""; // bersihkan tabel
+                        rows.forEach((r) => {
+                            const status = r.c[0].v;
+                            const jumlah = r.c[1].v;
+                            tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2">${status}</td><td class="px-4 py-2">${jumlah}</td></tr>`;
+                        });
+                    });
+            }
+
+            // Panggil setelah load chart
+            renderTable(sheetPengungsi, "tablePengungsi");
+            renderTable(sheetKorban, "tableKorban");
+
+            // Refresh setiap 3 menit
+            setInterval(() => {
+                renderTable(sheetPengungsi, "tablePengungsi");
+                renderTable(sheetKorban, "tableKorban");
+            }, 180000);
         </script>
     </body>
 </html>
