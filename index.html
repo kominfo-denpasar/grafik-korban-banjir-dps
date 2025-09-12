@@ -67,16 +67,10 @@
                 </div>
             </div>
 
-            <!-- Card Status Pengungsi -->
+            <!-- Chart Status Pengungsi -->
             <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
                 <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Status Pengungsi</h2>
                 <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
-
-                <!-- Tombol Switch -->
-                <div class="flex justify-center gap-2 sm:gap-4 mb-5">
-                    <button id="pieBtnPengungsi" class="px-4 py-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white text-sm sm:text-base transition">Pie</button>
-                    <button id="barBtnPengungsi" class="px-4 py-2 rounded-full bg-green-100 text-green-600 hover:bg-green-500 hover:text-white text-sm sm:text-base transition">Bar</button>
-                </div>
 
                 <!-- Chart -->
                 <div class="relative w-full">
@@ -88,16 +82,10 @@
                 <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
             </div>
 
-            <!-- Card Status Korban -->
+            <!-- Chart Status Korban -->
             <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
                 <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Status Korban</h2>
                 <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
-
-                <!-- Tombol Switch -->
-                <div class="flex justify-center gap-2 sm:gap-4 mb-5">
-                    <button id="pieBtnKorban" class="px-4 py-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white text-sm sm:text-base transition">Pie</button>
-                    <button id="barBtnKorban" class="px-4 py-2 rounded-full bg-green-100 text-green-600 hover:bg-green-500 hover:text-white text-sm sm:text-base transition">Bar</button>
-                </div>
 
                 <!-- Chart -->
                 <div class="relative w-full">
@@ -131,7 +119,7 @@
 
             // Default types
             let typePengungsi = "pie";
-            let typeKorban = "pie";
+            let typeKorban = "bar";
 
             // Fungsi load data dari Google Sheet
             async function loadData(sheetName, chartId, chartRef, currentType) {
