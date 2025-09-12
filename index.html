@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Grafik Status Pengungsi & Korban</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
+            <!-- Card Status Pengungsi -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Status Pengungsi</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+
+                <!-- Tombol Switch -->
+                <div class="flex justify-center gap-2 sm:gap-4 mb-5">
+                    <button id="pieBtnPengungsi" class="px-4 py-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white text-sm sm:text-base transition">Pie</button>
+                    <button id="barBtnPengungsi" class="px-4 py-2 rounded-full bg-green-100 text-green-600 hover:bg-green-500 hover:text-white text-sm sm:text-base transition">Bar</button>
+                </div>
+
+                <!-- Chart -->
+                <div class="relative w-full">
+                    <div class="aspect-[4/3] sm:aspect-[16/9]">
+                        <canvas id="pengungsiChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
+            </div>
+
+            <!-- Card Status Korban -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Status Korban</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+
+                <!-- Tombol Switch -->
+                <div class="flex justify-center gap-2 sm:gap-4 mb-5">
+                    <button id="pieBtnKorban" class="px-4 py-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white text-sm sm:text-base transition">Pie</button>
+                    <button id="barBtnKorban" class="px-4 py-2 rounded-full bg-green-100 text-green-600 hover:bg-green-500 hover:text-white text-sm sm:text-base transition">Bar</button>
+                </div>
+
+                <!-- Chart -->
+                <div class="relative w-full">
+                    <div class="aspect-[4/3] sm:aspect-[16/9]">
+                        <canvas id="korbanChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
+            </div>
+        </div>
+
+        <script>
+            const spreadsheetId = "1Jq3oW90z2dhdzN1rpsfVxRTOv3ftbDEU";
+
+            // Sheet Names
+            const sheetPengungsi = "statusPengungsi";
+            const sheetKorban = "statusKorban";
+
+            // Chart instances
+            let pengungsiChart;
+            let korbanChart;
+
+            // Default types
+            let typePengungsi = "pie";
+            let typeKorban = "pie";
+
+            // Fungsi load data dari Google Sheet
+            async function loadData(sheetName, chartId, chartRef, currentType) {
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+                const res = await fetch(url);
+                const rep = await res.text();
+                const jsonData = JSON.parse(rep.substring(47).slice(0, -2));
+                const rows = jsonData.table.rows;
+
+                const labels = rows.map((r) => r.c[0].v);
+                const data = rows.map((r) => r.c[1].v);
+
+                const ctx = document.getElementById(chartId).getContext("2d");
+
+                if (chartRef.value) {
+                    chartRef.value.destroy();
+                }
+
+                chartRef.value = new Chart(ctx, {
+                    type: currentType,
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Jumlah",
+                                data: data,
+                                backgroundColor: [
+                                    "rgba(239, 68, 68, 0.7)", // merah
+                                    "rgba(59, 130, 246, 0.7)", // biru
+                                    "rgba(245, 158, 11, 0.7)", // kuning
+                                    "rgba(34, 197, 94, 0.7)", // hijau
+                                    "rgba(168, 85, 247, 0.7)", // ungu
+                                    "rgba(251, 191, 36, 0.7)", // amber
+                                    "rgba(107, 114, 128, 0.7)", // abu
+                                ],
+                                borderColor: ["rgba(239, 68, 68, 1)", "rgba(59, 130, 246, 1)", "rgba(245, 158, 11, 1)", "rgba(34, 197, 94, 1)", "rgba(168, 85, 247, 1)", "rgba(251, 191, 36, 1)", "rgba(107, 114, 128, 1)"],
+                                borderWidth: 1,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: currentType === "pie" ? "bottom" : "top",
+                                labels: { font: { size: 12 } },
+                            },
+                        },
+                        scales:
+                            currentType === "bar"
+                                ? {
+                                      y: {
+                                          beginAtZero: true,
+                                          ticks: { stepSize: 100 },
+                                      },
+                                  }
+                                : {},
+                    },
+                });
+            }
+
+            // Load kedua grafik pertama kali
+            loadData(
+                sheetPengungsi,
+                "pengungsiChart",
+                {
+                    get value() {
+                        return pengungsiChart;
+                    },
+                    set value(v) {
+                        pengungsiChart = v;
+                    },
+                },
+                typePengungsi
+            );
+            loadData(
+                sheetKorban,
+                "korbanChart",
+                {
+                    get value() {
+                        return korbanChart;
+                    },
+                    set value(v) {
+                        korbanChart = v;
+                    },
+                },
+                typeKorban
+            );
+
+            // Refresh tiap 3 menit
+            setInterval(() => {
+                loadData(
+                    sheetPengungsi,
+                    "pengungsiChart",
+                    {
+                        get value() {
+                            return pengungsiChart;
+                        },
+                        set value(v) {
+                            pengungsiChart = v;
+                        },
+                    },
+                    typePengungsi
+                );
+                loadData(
+                    sheetKorban,
+                    "korbanChart",
+                    {
+                        get value() {
+                            return korbanChart;
+                        },
+                        set value(v) {
+                            korbanChart = v;
+                        },
+                    },
+                    typeKorban
+                );
+            }, 180000);
+
+            // Event listener tombol
+            document.getElementById("pieBtnPengungsi").addEventListener("click", () => {
+                typePengungsi = "pie";
+                loadData(
+                    sheetPengungsi,
+                    "pengungsiChart",
+                    {
+                        get value() {
+                            return pengungsiChart;
+                        },
+                        set value(v) {
+                            pengungsiChart = v;
+                        },
+                    },
+                    typePengungsi
+                );
+            });
+            document.getElementById("barBtnPengungsi").addEventListener("click", () => {
+                typePengungsi = "bar";
+                loadData(
+                    sheetPengungsi,
+                    "pengungsiChart",
+                    {
+                        get value() {
+                            return pengungsiChart;
+                        },
+                        set value(v) {
+                            pengungsiChart = v;
+                        },
+                    },
+                    typePengungsi
+                );
+            });
+
+            document.getElementById("pieBtnKorban").addEventListener("click", () => {
+                typeKorban = "pie";
+                loadData(
+                    sheetKorban,
+                    "korbanChart",
+                    {
+                        get value() {
+                            return korbanChart;
+                        },
+                        set value(v) {
+                            korbanChart = v;
+                        },
+                    },
+                    typeKorban
+                );
+            });
+            document.getElementById("barBtnKorban").addEventListener("click", () => {
+                typeKorban = "bar";
+                loadData(
+                    sheetKorban,
+                    "korbanChart",
+                    {
+                        get value() {
+                            return korbanChart;
+                        },
+                        set value(v) {
+                            korbanChart = v;
+                        },
+                    },
+                    typeKorban
+                );
+            });
+        </script>
+    </body>
+</html>
