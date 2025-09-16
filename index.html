@@ -625,55 +625,5 @@
                 updateTotalKorban("dashboardTotalKorbanMasuk");
             }, 180000);
         </script>
-
-        <script>
-            const sheetKoordinat = "dashboardKoordinatPeta";
-
-            // Inisialisasi peta
-            const map = L.map("map").setView([-8.65, 115.22], 12);
-
-            // Tambah layer OpenStreetMap
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "© OpenStreetMap contributors",
-            }).addTo(map);
-
-            // Fungsi load data dari Google Sheet
-            async function loadMapData() {
-                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetKoordinat}`;
-                const res = await fetch(url);
-                const rep = await res.text();
-                const jsonData = JSON.parse(rep.substring(47).slice(0, -2));
-                const rows = jsonData.table.rows;
-
-                // Hapus marker lama
-                map.eachLayer((layer) => {
-                    if (layer instanceof L.Marker) map.removeLayer(layer);
-                });
-
-                rows.forEach((r) => {
-                    const nama = r.c[0]?.v; // Nama Lokasi
-                    const lat = r.c[2]?.v; // Latidute
-                    const lng = r.c[3]?.v; // Longtidue
-                    const fileId = r.c[5]?.v; // Ambil File ID
-
-                    if (lat && lng) {
-                        const fotoUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : "";
-
-                        // Buat element image dengan fallback jika gagal load
-                        const imgHtml = fotoUrl
-                            ? `<img src="${fotoUrl}" class="popup-img" onerror="this.onerror=null;this.replaceWith(document.createElement('div').innerHTML='<div class=\\'popup-placeholder\\'>Gambar tidak tersedia</div>');">`
-                            : "";
-
-                        L.marker([lat, lng]).addTo(map).bindPopup(`<b>${nama}</b>${imgHtml}`);
-                    }
-                });
-            }
-
-            // Panggil pertama kali
-            loadMapData();
-
-            // Refresh setiap 3 menit
-            setInterval(loadMapData, 180000);
-        </script>
     </body>
 </html>
