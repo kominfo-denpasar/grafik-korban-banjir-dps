@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Grafik Status Pengungsi & Korban</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+        <!-- CSS & Library Leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+        <!-- icon -->
+        <link rel="icon" type="image/png" sizes="32x32" href="Lambang_Kota_Denpasar.png" />
+    </head>
+    <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6 gap-8 pb-20 pt-20">
+        <!-- Navbar Sticky Responsive -->
+        <nav class="w-full bg-gray-800 text-white fixed top-0 left-0 z-50 shadow-md">
+            <div class="px-6 py-4 flex justify-between items-center">
+                <!-- Logo / Brand -->
+                <a href="" class="text-xl font-bold">Dashboard Pemantauan Korban Banjir</a>
+
+                <!-- Menu Desktop -->
+                <ul class="hidden md:flex space-x-6">
+                    <li><a href="index.html" class="hover:text-yellow-300">Home</a></li>
+                    <li><a href="kerusakan.html" class="hover:text-yellow-300">Data Kerusakan</a></li>
+                    <li><a href="pedagang.html" class="hover:text-yellow-300">Data Pedagang</a></li>
+                </ul>
+
+                <!-- Hamburger / Mobile -->
+                <div class="md:hidden">
+                    <button id="menu-btn" class="focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Menu Mobile -->
+            <ul id="menu" class="hidden flex-col space-y-2 px-6 pb-4 md:hidden bg-gray-800 transition-all duration-300 ease-in-out">
+                <li><a href="index.html" class="block hover:text-yellow-300">Home</a></li>
+                <li><a href="kerusakan.html" class="block hover:text-yellow-300">Data Kerusakan</a></li>
+                <li><a href="pedagang.html" class="block hover:text-yellow-300">Data Pedagang</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <!-- Chart Rumah -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Grafik Kerusakan Rumah per Kecamatan</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+                <canvas id="chartRumah"></canvas>
+                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
+            </div>
+
+            <!-- Chart Pura -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Grafik Kerusakan Pura per Kecamatan</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+                <canvas id="chartPura"></canvas>
+                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
+            </div>
+
+            <!-- Chart Pasar -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Grafik Kerusakan Pasar per Kecamatan</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+                <canvas id="chartPasar"></canvas>
+                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
+            </div>
+
+            <!-- Chart Lainnya -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Grafik Kerusakan Lainnya per Kecamatan</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Statistik real-time dari Google Sheet</p>
+                <canvas id="chartLainnya"></canvas>
+                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
+            </div>
+        </div>
+
+        <!-- Sticky Footer -->
+        <footer class="w-full bg-gray-800 text-gray-200 py-4 mt-8 fixed bottom-0 left-0">
+            <div class="flex flex-col md:flex-row justify-between items-center px-6 gap-2">
+                <p class="text-sm">&copy; 2025 Dashboard Pemantauan Korban Banjir. Created by Tim SPBE Kominfos Denpasar</p>
+                <p class="text-sm mt-2 md:mt-0">Data berasal dari Google Sheets resmi.</p>
+                <p id="lastUpdate" class="text-sm mt-2 md:mt-0 text-yellow-300"></p>
+            </div>
+        </footer>
+
+        <script>
+            const btn = document.getElementById("menu-btn");
+            const menu = document.getElementById("menu");
+
+            btn.addEventListener("click", () => {
+                menu.classList.toggle("hidden");
+            });
+        </script>
+
+        <script>
+            setInterval(() => {
+                location.reload();
+            }, 3 * 60 * 60 * 1000);
+        </script>
+
+        <script>
+            const spreadsheetId = "10XJYMLUWYykmHH6OG_ih5I6AxWF7PfMU";
+            const sheetName = "REKAPAN";
+            const labels = ["DENUT", "DENTIM", "DENSEL", "DENBAR"];
+
+            let chartRumah, chartPura, chartPasar, chartLainnya;
+
+            const baseOptions = {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    datalabels: {
+                        anchor: "end",
+                        align: "top",
+                        color: "#111",
+                        font: { weight: "bold" },
+                        formatter: (value) => value,
+                    },
+                },
+            };
+
+            function getTimeNow() {
+                const now = new Date();
+                return now.toLocaleString("id-ID", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                });
+            }
+
+            function setLastUpdate() {
+                document.getElementById("lastUpdate").innerText = "Terakhir diperbarui: " + getTimeNow();
+            }
+
+            // Ambil data dari Google Sheet
+            async function fetchSheet() {
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substr(47).slice(0, -2));
+                return json.table.rows.map((r) => r.c.map((c) => (c ? c.v : 0)));
+            }
+
+            async function renderCharts() {
+                if (chartRumah) chartRumah.destroy();
+                if (chartPura) chartPura.destroy();
+                if (chartPasar) chartPasar.destroy();
+                if (chartLainnya) chartLainnya.destroy();
+
+                const rows = await fetchSheet();
+
+                // ambil data per kolom (skip header TOTAL di row terakhir)
+                const data = rows.filter((r) => labels.includes(r[0]));
+
+                const rumahRingan = data.map((r) => r[2]);
+                const rumahSedang = data.map((r) => r[3]);
+                const rumahBerat = data.map((r) => r[4]);
+
+                const puraRingan = data.map((r) => r[5]);
+                const puraSedang = data.map((r) => r[6]);
+                const puraBerat = data.map((r) => r[7]);
+
+                const pasarRingan = data.map((r) => r[8]);
+                const pasarSedang = data.map((r) => r[9]);
+                const pasarBerat = data.map((r) => r[10]);
+
+                const lainRingan = data.map((r) => r[11]);
+                const lainSedang = data.map((r) => r[12]);
+                const lainBerat = data.map((r) => r[13]);
+
+                // RUMAH
+                chartRumah = new Chart(document.getElementById("chartRumah"), {
+                    type: "bar",
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: "Ringan", data: rumahRingan, backgroundColor: "#60A5FA" },
+                            { label: "Sedang", data: rumahSedang, backgroundColor: "#2563EB" },
+                            { label: "Berat", data: rumahBerat, backgroundColor: "#1E3A8A" },
+                        ],
+                    },
+                    options: baseOptions,
+                    plugins: [ChartDataLabels],
+                });
+
+                // PURA
+                chartPura = new Chart(document.getElementById("chartPura"), {
+                    type: "bar",
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: "Ringan", data: puraRingan, backgroundColor: "#FDE68A" },
+                            { label: "Sedang", data: puraSedang, backgroundColor: "#FACC15" },
+                            { label: "Berat", data: puraBerat, backgroundColor: "#CA8A04" },
+                        ],
+                    },
+                    options: baseOptions,
+                    plugins: [ChartDataLabels],
+                });
+
+                // PASAR
+                chartPasar = new Chart(document.getElementById("chartPasar"), {
+                    type: "bar",
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: "Ringan", data: pasarRingan, backgroundColor: "#6EE7B7" },
+                            { label: "Sedang", data: pasarSedang, backgroundColor: "#10B981" },
+                            { label: "Berat", data: pasarBerat, backgroundColor: "#065F46" },
+                        ],
+                    },
+                    options: baseOptions,
+                    plugins: [ChartDataLabels],
+                });
+
+                // LAINNYA
+                chartLainnya = new Chart(document.getElementById("chartLainnya"), {
+                    type: "bar",
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: "Ringan", data: lainRingan, backgroundColor: "#FCA5A5" },
+                            { label: "Sedang", data: lainSedang, backgroundColor: "#DC2626" },
+                            { label: "Berat", data: lainBerat, backgroundColor: "#7F1D1D" },
+                        ],
+                    },
+                    options: baseOptions,
+                    plugins: [ChartDataLabels],
+                });
+
+                setLastUpdate();
+            }
+
+            // Jalankan pertama kali
+            renderCharts();
+
+            // Auto refresh tiap 3 menit
+            setInterval(renderCharts, 3 * 60 * 1000);
+        </script>
+    </body>
+</html>
