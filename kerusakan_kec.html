@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Data Kerusakan</title>
+  <meta http-equiv="refresh" content="60; url=kerusakan_desa.html">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <h1 class="text-3xl font-bold text-gray-700">📊 Dashboard Data Kerusakan</h1>
+
+    <!-- Total Data -->
+    <div class="bg-blue-100 border border-blue-300 text-blue-800 px-6 py-4 rounded-xl shadow flex items-center space-x-3">
+      <div class="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">Σ</div>
+      <p class="text-lg font-semibold">
+        Data Terverifikasi: <span id="totalData" class="text-2xl">0</span> entri
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6">
+
+        <!-- Kecamatan -->
+        <div class="bg-white shadow-lg rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Kerusakan per Kecamatan</h2>
+        <div id="kecamatanLoading" class="flex items-center justify-center h-64">
+            <div class="animate-spin rounded-full h-10 w-10 border-4 border-green-500 border-t-transparent"></div>
+            <span class="ml-3 text-gray-500">Memuat data...</span>
+        </div>
+        <canvas id="kecamatanChart" class="w-full h-80 hidden"></canvas>
+        </div>
+
+    </div>
+
+  <script>
+    const API_URL = "https://ndb.kreatifitas.site/api/v2/tables/msl7m0scurx5o75/records?where=(Verifikasi Status Kelurahan/Desa,like,Sudah)";
+    const TOKEN = "jzBVCM2swK1qob6lcA5H6QqEvFmWQg4nI8-utBG_";
+
+    async function fetchAllData() {
+      let allRecords = [];
+      let page = 1;
+      let lastPage = false;
+
+      while (!lastPage) {
+        const res = await fetch(`${API_URL}&page=${page}&pageSize=200`, {
+          headers: { "xc-token": TOKEN }
+        });
+        const json = await res.json();
+        allRecords = allRecords.concat(json.list || []);
+        lastPage = json.pageInfo.isLastPage;
+        page++;
+      }
+      return allRecords;
+    }
+
+    function aggregateData(records, field) {
+      const counts = {};
+      records.forEach(r => {
+        const key = r[field] || "Tidak Ada Data";
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      return { labels: Object.keys(counts), values: Object.values(counts) };
+    }
+
+    function renderChart(canvasId, loadingId, type, labels, values, labelText) {
+      document.getElementById(loadingId).style.display = "none";
+      document.getElementById(canvasId).classList.remove("hidden");
+
+      const ctx = document.getElementById(canvasId).getContext("2d");
+      new Chart(ctx, {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: labelText,
+            data: values,
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.6)",
+              "rgba(54, 162, 235, 0.6)",
+              "rgba(255, 206, 86, 0.6)",
+              "rgba(75, 192, 192, 0.6)",
+              "rgba(153, 102, 255, 0.6)",
+              "rgba(255, 159, 64, 0.6)"
+            ],
+            borderColor: "white",
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "bottom" },
+            datalabels: {
+              color: "#000",
+              font: { weight: "bold" },
+              formatter: (value, ctx) => {
+                const dataset = ctx.chart.data.datasets[0].data;
+                const total = dataset.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${value} (${percentage}%)`;
+              }
+            }
+          },
+          scales: type === "bar" ? { y: { beginAtZero: true, ticks: { precision: 0 } } } : {}
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+
+    async function loadDashboard() {
+      const records = await fetchAllData();
+
+      // Tampilkan total data
+      document.getElementById("totalData").textContent = records.length;
+
+      // Kecamatan
+      const kecamatan = aggregateData(records, "Kecamatan");
+      renderChart("kecamatanChart", "kecamatanLoading", "bar", kecamatan.labels, kecamatan.values, "Jumlah");
+
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
