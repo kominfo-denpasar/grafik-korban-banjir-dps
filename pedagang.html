@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <title>Grafik Status Pengungsi & Korban</title>
+        <meta http-equiv="refresh" content="60; url=index.html">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -49,30 +50,40 @@
         <!-- Kumbasari Malam -->
         <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-6 w-full">
             <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
-                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center">📊 Potensi Pelantaran Kumbasari Malam per KAB/KOTA</h2>
-                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center">Data real-time dari Google Sheet</p>
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center col-span-2">
+                    📊 Potensi Pelantaran Kumbasari Malam per KAB/KOTA
+                </h2>
+                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center col-span-2">
+                    Data real-time dari Google Sheet
+                </p>
 
-                <div class="relative w-full">
+                <!-- Grid 2 kolom: kiri chart, kanan tabel -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <!-- Grafik -->
+                    <div class="relative w-full">
                     <div class="aspect-[4/3] sm:aspect-[16/9]">
                         <canvas id="potensiChart" class="w-full h-full"></canvas>
                     </div>
-                </div>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">
+                        🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span>
+                    </p>
+                    </div>
 
-                <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span></p>
-
-                <!-- Tabel -->
-                <div class="overflow-x-auto mt-4">
+                    <!-- Tabel -->
+                    <div class="overflow-x-auto">
                     <table id="tablePotensi" class="min-w-full text-sm text-left text-gray-600">
                         <thead class="bg-gray-100 text-gray-700">
-                            <tr>
-                                <th class="px-4 py-2">KAB/KOTA</th>
-                                <th class="px-4 py-2">Potensi</th>
-                            </tr>
+                        <tr>
+                            <th class="px-4 py-2">KAB/KOTA</th>
+                            <th class="px-4 py-2">Potensi</th>
+                        </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
+                    </div>
                 </div>
-            </div>
+                </div>
+
         </div>
 
         <!-- Sticky Footer -->
