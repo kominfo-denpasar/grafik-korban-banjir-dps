@@ -155,9 +155,38 @@
       const kecamatan = aggregateData(records, "Kecamatan");
       renderChart("kecamatanChart", "kecamatanLoading", "bar", kecamatan.labels, kecamatan.values, "Jumlah");
 
+      // ambil tanggal terbaru
+      const latestDate = getLatestDate(records);
+      // console.log("Latest Date:", latestDate);
+      if (latestDate) {
+        document.getElementById("last-update").innerText = 
+          "Update terakhir: " + formatTanggal(latestDate);
+      }
+
     }
 
     loadDashboard();
+
+
+    // Fungsi tambahan untuk mendapatkan tanggal terbaru
+    function getLatestDate(records) {
+      // console.log("Records for date check:", records);
+      if (!records.length) return null;
+      const latest = records.reduce((a, b) => {
+        return new Date(a.CreatedAt) > new Date(b.CreatedAt) ? a : b;
+      });
+      return latest.CreatedAt;
+    }
+
+    function formatTanggal(tanggal) {
+      return new Date(tanggal).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
   </script>
 </body>
 </html>
