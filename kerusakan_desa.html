@@ -14,7 +14,7 @@
       <div class="px-6 py-4 flex justify-between items-center">
           <!-- Logo / Brand -->
           <a href="" class="text-xl font-bold">Dashboard Pemantauan Korban Banjir</a>
-          <small id="last-updates" class="text-sm mt-2 md:mt-0 text-yellow-300">Update Terakhir 19/09/2025 - 12.30 WITA</small>
+          <small id="last-update" class="text-sm mt-2 md:mt-0 text-yellow-300">Update Terakhir: Menunggu...</small>
 
           <!-- Menu Desktop -->
           <ul class="hidden md:flex space-x-6">
@@ -176,9 +176,9 @@
       // console.log("Records for date check:", records);
       if (!records.length) return null;
       const latest = records.reduce((a, b) => {
-        return new Date(a.CreatedAt) > new Date(b.CreatedAt) ? a : b;
+        return new Date(a.tanggal_update) > new Date(b.tanggal_update) ? a : b;
       });
-      return latest.CreatedAt;
+      return latest.tanggal_update;
     }
 
     function formatTanggal(tanggal) {
