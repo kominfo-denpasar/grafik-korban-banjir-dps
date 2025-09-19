@@ -187,9 +187,9 @@
       // console.log("Records for date check:", records);
       if (!records.length) return null;
       const latest = records.reduce((a, b) => {
-        return new Date(a.CreatedAt) > new Date(b.CreatedAt) ? a : b;
+        return new Date(a.tanggal_update) > new Date(b.tanggal_update) ? a : b;
       });
-      return latest.CreatedAt;
+      return latest.tanggal_update;
     }
 
     function formatTanggal(tanggal) {
