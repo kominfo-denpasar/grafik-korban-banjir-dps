@@ -2,8 +2,8 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>Grafik Status Pengungsi & Korban</title>
-        <meta http-equiv="refresh" content="160; url=kerusakan_jenis.html">
+        <title>Grafik Potensi & Pedagang Pasar</title>
+        <meta http-equiv="refresh" content="160; url=kerusakan_jenis.html" />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -53,100 +53,116 @@
             </ul>
         </nav>
 
-        <!-- Kumbasari Malam -->
-        <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-6 w-full">
+        <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <!-- Grafik Pasar -->
             <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
-                <h2 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4 text-center col-span-2">
-                    📊 Potensi Pelataran Kumbasari Malam per KAB/KOTA
+                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                    📊 Grafik Potensi & Pedagang <br />
+                    Pasar Kumbasari dan Pasar Badung
                 </h2>
-                <p class="text-xs sm:text-sm text-gray-500 mb-4 text-center col-span-2">
-                    Data real-time dari Google Sheet
-                </p>
+                <p class="text-sm text-gray-500 mb-4 text-center">Data real-time dari Google Sheet</p>
 
-                <!-- Grid 2 kolom: kiri chart, kanan tabel -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                    <!-- Grafik -->
-                    <div class="relative w-full">
-                    <div class="aspect-[4/3] sm:aspect-[16/9]">
-                        <canvas id="potensiChart" class="w-full h-full"></canvas>
-                    </div>
-                    <p class="text-xs sm:text-sm text-gray-500 mt-4 text-center">
-                        🔄 Data diperbarui otomatis setiap <span class="font-semibold">3 menit</span>
-                    </p>
-                    </div>
+                <div class="w-full">
+                    <canvas id="potensiChart" class="w-full h-80"></canvas>
+                    <!-- Ringkasan Total -->
+                    <div id="chartTotal" class="text-center font-bold mt-3 text-gray-800"></div>
+                </div>
 
-                    <!-- Tabel -->
-                    <div class="overflow-x-auto">
+                <!-- Tabel -->
+                <div class="overflow-x-auto mt-6">
                     <table id="tablePotensi" class="min-w-full text-sm text-left text-gray-600">
                         <thead class="bg-gray-100 text-gray-700">
-                        <tr>
-                            <th class="px-4 py-2">KAB/KOTA</th>
-                            <th class="px-4 py-2">Potensi</th>
-                        </tr>
+                            <tr>
+                                <th class="px-4 py-2">Pasar</th>
+                                <th class="px-4 py-2">Potensi</th>
+                                <th class="px-4 py-2">Pedagang</th>
+                            </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
-                    </div>
                 </div>
-                </div>
+            </div>
 
+            <!-- Grafik Pasar -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-6 md:p-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">📊 Grafik Kepemilikan Rekening Pedagang Pasar</h2>
+                <p class="text-sm text-gray-500 mb-4 text-center">Data real-time dari Google Sheet</p>
+
+                <div class="w-full">
+                    <canvas id="rekeningChart" class="w-full h-80"></canvas>
+                </div>
+            </div>
         </div>
 
         <!-- Sticky Footer -->
         <footer class="w-full bg-gray-800 text-gray-200 py-4 mt-8 fixed bottom-0 left-0">
             <div class="flex flex-col md:flex-row justify-between items-center px-6 gap-2">
-                <p class="text-sm">&copy; 2025 Dashboard Pemantauan Korban Banjir. Created by Tim SPBE Kominfos Denpasar</p>
+                <p class="text-sm">&copy; 2025 Dashboard Data Pedagang. Created by Tim SPBE Kominfos Denpasar</p>
                 <p class="text-sm mt-2 md:mt-0">Data berasal dari Google Sheets resmi.</p>
-                <p id="lastUpdate" class="text-sm mt-2 md:mt-0 text-yellow-300"></p>
+                <!-- <p id="lastUpdate" class="text-sm mt-2 md:mt-0 text-yellow-300"></p> -->
+                <p id="" class="text-sm mt-2 md:mt-0 text-yellow-300">Terakhir diperbarui: Jumat, 19 September 2025 pukul 10.30 WITA</p>
             </div>
         </footer>
 
         <script>
-            const btn = document.getElementById("menu-btn");
-            const menu = document.getElementById("menu");
+            const spreadsheetId = "1Lp386_pK9o4OKwyBmqgLuo31sbE25ook";
+            const sheetName = "Sheet1";
+            let potensiChart, rekeningChart;
 
-            btn.addEventListener("click", () => {
-                menu.classList.toggle("hidden");
-            });
-        </script>
-
-        <script>
-            setInterval(() => {
-                location.reload();
-            }, 3 * 60 * 60 * 1000);
-        </script>
-
-        <script>
-            const spreadsheetId = "1zYjpy6LUWPvU33uAvbwQ2e95wduLWg8J";
-
-            const sheetPotensi = "dashboardPelataranMalam"; // ganti sesuai nama sheet-mu
-            let potensiChart;
-
-            // Fungsi load data dan render chart + tabel
-            async function loadPotensi() {
-                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetPotensi}`;
+            async function loadData() {
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
                 const res = await fetch(url);
                 const rep = await res.text();
                 const jsonData = JSON.parse(rep.substring(47).slice(0, -2));
                 const rows = jsonData.table.rows;
 
-                const labels = rows.map((r) => r.c[0]?.v);
-                const data = rows.map((r) => r.c[1]?.v);
+                let labels = [];
+                let potensi = [];
+                let pedagang = [];
+                let totalPotensi = 0;
+                let totalPedagang = 0;
 
-                // Render chart
-                const ctx = document.getElementById("potensiChart").getContext("2d");
+                let totalSudah = 0;
+                let totalBelum = 0;
+
+                // Loop semua data
+                rows.forEach((r) => {
+                    const pasar = r.c[0]?.v || "";
+                    const pot = r.c[1]?.v || 0;
+                    const ped = r.c[2]?.v || 0;
+                    const sudah = r.c[3]?.v || 0;
+                    const belum = r.c[4]?.v || 0;
+
+                    if (pasar && pasar.toUpperCase() !== "TOTAL") {
+                        labels.push(pasar);
+                        potensi.push(pot);
+                        pedagang.push(ped);
+
+                        totalPotensi += pot;
+                        totalPedagang += ped;
+
+                        totalSudah += sudah;
+                        totalBelum += belum;
+                    }
+                });
+
+                // === Render Chart Batang ===
+                const ctxBar = document.getElementById("potensiChart").getContext("2d");
                 if (potensiChart) potensiChart.destroy();
-                potensiChart = new Chart(ctx, {
-                    type: "pie",
+                potensiChart = new Chart(ctxBar, {
+                    type: "bar",
                     data: {
                         labels,
                         datasets: [
                             {
                                 label: "Potensi",
-                                data,
-                                backgroundColor: ["#EF4444", "#3B82F6", "#F59E0B", "#22C55E", "#A855F7", "#FBBF24", "#6B7280", "#EF4444", "#3B82F6", "#F59E0B", "#22C55E", "#A855F7", "#FBBF24", "#6B7280"],
-                                borderColor: "#fff",
-                                borderWidth: 1,
+                                data: potensi,
+                                backgroundColor: "#3B82F6",
+                            },
+                            {
+                                label: "Pedagang",
+                                data: pedagang,
+                                backgroundColor: "#F59E0B",
                             },
                         ],
                     },
@@ -154,20 +170,89 @@
                         responsive: true,
                         plugins: {
                             legend: { position: "top" },
+                            datalabels: {
+                                anchor: "end",
+                                align: "top",
+                                formatter: (value) => value,
+                                font: { weight: "bold" },
+                            },
+                        },
+                        scales: {
+                            y: { beginAtZero: true },
                         },
                     },
+                    plugins: [ChartDataLabels],
                 });
 
-                // Render tabel
+                // === Render Tabel ===
                 const tbody = document.querySelector("#tablePotensi tbody");
                 tbody.innerHTML = "";
-                rows.forEach((r) => {
-                    const kab = r.c[0]?.v;
-                    const potensi = r.c[1]?.v;
-                    tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2">${kab}</td><td class="px-4 py-2">${potensi}</td></tr>`;
+                labels.forEach((pasar, i) => {
+                    tbody.innerHTML += `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="border px-2 py-1">${pasar}</td>
+            <td class="border px-2 py-1">${potensi[i]}</td>
+            <td class="border px-2 py-1">${pedagang[i]}</td>
+          </tr>`;
                 });
 
-                // Update footer terakhir diperbarui
+                // Tambahkan total
+                tbody.innerHTML += `
+        <tr class="bg-gray-200 font-bold">
+          <td class="border px-2 py-1">TOTAL</td>
+          <td class="border px-2 py-1">${totalPotensi}</td>
+          <td class="border px-2 py-1">${totalPedagang}</td>
+        </tr>`;
+
+                // Update ringkasan total
+                document.getElementById("chartTotal").innerHTML = `
+        Total Potensi: <span class="text-blue-600">${totalPotensi.toLocaleString("id-ID")}</span> | 
+        Total Pedagang: <span class="text-yellow-600">${totalPedagang.toLocaleString("id-ID")}</span>
+      `;
+
+                // === Render Pie Rekening ===
+                const ctxPie = document.getElementById("rekeningChart").getContext("2d");
+                if (rekeningChart) rekeningChart.destroy();
+                rekeningChart = new Chart(ctxPie, {
+                    type: "pie",
+                    data: {
+                        labels: ["Sudah Memiliki Rekening", "Belum Memiliki Rekening"],
+                        datasets: [
+                            {
+                                data: [totalSudah, totalBelum],
+                                backgroundColor: ["#10B981", "#EF4444"], // hijau & merah
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: "bottom" },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const total = totalSudah + totalBelum;
+                                        const value = context.raw;
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${value} (${percentage}%)`;
+                                    },
+                                },
+                            },
+                            datalabels: {
+                                color: "#000", // warna teks
+                                font: { weight: "bold", size: 14 },
+                                formatter: (value, ctx) => {
+                                    const total = totalSudah + totalBelum;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value}\n(${percentage}%)`;
+                                },
+                            },
+                        },
+                    },
+                    plugins: [ChartDataLabels],
+                });
+
+                // === Update footer waktu terakhir update ===
                 const now = new Date();
                 const formatted = now.toLocaleString("id-ID", {
                     weekday: "long",
@@ -181,11 +266,8 @@
                 document.getElementById("lastUpdate").textContent = `Terakhir diperbarui: ${formatted}`;
             }
 
-            // Load pertama kali
-            loadPotensi();
-
-            // Refresh tiap 3 menit
-            setInterval(loadPotensi, 180000);
+            loadData();
+            setInterval(loadData, 180000); // refresh tiap 3 menit
         </script>
     </body>
 </html>
